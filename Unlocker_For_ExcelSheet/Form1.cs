@@ -68,20 +68,39 @@ namespace ExcelPasswordRemover
                 }
                 // xml 파일에서 보호시트 관련 태그 삭제하는 프로세스
                 ProcessXmlFiles(extractPath);
-                // 재압축
-                using (ZipFile zip = new ZipFile())
-                {
-                    zip.AddDirectory(extractPath);
-                    zip.Save(zipFilePath);
-                }
-                // 압축된 파일을 다시 xlsx 확장자로 바꿔준다
-                string newFilePath = Path.ChangeExtension(zipFilePath, ".xlsx");
-                File.Move(zipFilePath, newFilePath);
-                label3.Text = "보호시트 비밀번호 해제 완료";
 
-                if (DialogResult.Yes == MessageBox.Show("작업이 완료되었습니다 해당파일을 실행 하시겠습니까?", "알림", MessageBoxButtons.YesNo, MessageBoxIcon.Information))
+                // 보호시트가 있는지 확인
+                if (!CheckProtectionSheet(extractPath))
                 {
-                    Process.Start(newFilePath);
+                    MessageBox.Show("이 Excel 파일에는 보호된 시트가 없습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 재압축
+                    using (ZipFile zip = new ZipFile())
+                    {
+                        zip.AddDirectory(extractPath);
+                        zip.Save(zipFilePath);
+                    }
+                    // 압축된 파일을 다시 xlsx 확장자로 바꿔준다
+                    string newFilePath = Path.ChangeExtension(zipFilePath, ".xlsx");
+                    File.Move(zipFilePath, newFilePath);
+                    label3.Text = "보호시트가 없습니다";
+                }
+                else
+                {
+                    // 재압축
+                    using (ZipFile zip = new ZipFile())
+                    {
+                        zip.AddDirectory(extractPath);
+                        zip.Save(zipFilePath);
+                    }
+                    // 압축된 파일을 다시 xlsx 확장자로 바꿔준다
+                    string newFilePath = Path.ChangeExtension(zipFilePath, ".xlsx");
+                    File.Move(zipFilePath, newFilePath);
+                    label3.Text = "보호시트 비밀번호 해제 완료";
+
+                    if (DialogResult.Yes == MessageBox.Show("작업이 완료되었습니다 해당파일을 실행 하시겠습니까?", "알림", MessageBoxButtons.YesNo, MessageBoxIcon.Information))
+                    {
+                        Process.Start(newFilePath);
+                    }
                 }
             }
             catch (Exception ex)
@@ -110,12 +129,41 @@ namespace ExcelPasswordRemover
                         // 정규식을 사용해 sheetProtection 으로 시작하고 그 뒤에 어떤 속성이든 있을 수 있는 태그를 찾는다
                         fileContent = Regex.Replace(fileContent, "<sheetProtection[^>]*>", "", RegexOptions.Singleline);
                         File.WriteAllText(xmlFile, fileContent);
+
                     }
+
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"오류: {ex.Message}");
+            }
+        }
+
+        // 보호시트를 확인하는 메서드
+        private bool CheckProtectionSheet(string directoryPath)
+        {
+            string[] xmlFiles = Directory.GetFiles(directoryPath, "*.xml", SearchOption.AllDirectories);
+
+            try
+            {
+                if (xmlFiles != null)
+                {
+                    foreach (string xmlFile in xmlFiles)
+                    {
+                        string fileContent = File.ReadAllText(xmlFile);
+                        if (Regex.IsMatch(fileContent, "<sheetProtection[^>]*>"))
+                        {
+                            return true; // 보호시트가 있는 경우 true 반환
+                        }
+                    }
+                }
+                return false; // 보호시트가 없는 경우 false 반환
+            }
+           catch(Exception ex)
+            {
+                MessageBox.Show($"오류 : {ex.Message}");
+                return false;
             }
         }
     }
