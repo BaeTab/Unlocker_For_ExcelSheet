@@ -25,6 +25,19 @@ namespace Unlocker_For_ExcelSheet
 
             // High DPI + Visual Styles (csproj <UseWindowsForms> 로 소스 생성됨)
             ApplicationConfiguration.Initialize();
+
+            // 전역 예외 안전망: 처리되지 않은 예외로 앱이 조용히 죽는 것을 막고 안내한다.
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += (s, e) =>
+                MessageBox.Show("예기치 않은 오류가 발생했습니다:" + Environment.NewLine + Environment.NewLine + e.Exception.Message,
+                    "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            {
+                var ex = e.ExceptionObject as Exception;
+                MessageBox.Show("치명적 오류: " + (ex?.Message ?? "알 수 없는 오류"),
+                    "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            };
+
             Application.Run(new Form1());
         }
     }

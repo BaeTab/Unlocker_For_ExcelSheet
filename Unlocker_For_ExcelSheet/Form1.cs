@@ -77,17 +77,20 @@ namespace Unlocker_For_ExcelSheet
             try
             {
                 var info = await UpdateChecker.CheckAsync();
+                if (info == null)
+                {
+                    MessageBox.Show(this, "업데이트 정보를 가져오지 못했습니다.", "업데이트",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 if (info.UpdateAvailable)
                 {
                     var r = MessageBox.Show(this, info.Message + Environment.NewLine + Environment.NewLine +
                         "다운로드 페이지를 여시겠습니까?", "업데이트", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                     if (r == DialogResult.Yes)
                     {
-                        string url = string.IsNullOrEmpty(info.DownloadUrl) ? info.ReleaseUrl : info.DownloadUrl;
-                        if (!string.IsNullOrEmpty(url))
-                        {
-                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
-                        }
+                        OpenWithShell(string.IsNullOrEmpty(info.DownloadUrl) ? info.ReleaseUrl : info.DownloadUrl);
                     }
                 }
                 else
@@ -96,9 +99,33 @@ namespace Unlocker_For_ExcelSheet
                         MessageBoxButtons.OK, info.CheckFailed ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
                 }
             }
+            catch (Exception ex)
+            {
+                // async void 이므로 예외가 새어나가면 앱이 죽는다. 여기서 흡수.
+                MessageBox.Show(this, "업데이트 확인 중 오류: " + ex.Message, "업데이트",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
             finally
             {
                 btnCheckUpdate.Enabled = true;
+            }
+        }
+
+        /// <summary>URL/폴더 경로를 셸로 연다. 실패(핸들러 없음/경로 소멸 등)해도 앱이 죽지 않도록 흡수.</summary>
+        private void OpenWithShell(string target)
+        {
+            if (string.IsNullOrEmpty(target))
+            {
+                return;
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(target) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "열 수 없습니다: " + ex.Message, "알림", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -211,6 +238,10 @@ namespace Unlocker_For_ExcelSheet
             }
 
             SetBusy(true);
+
+            // 새 배치 시작 시 이전 배치의 결과 폴더 상태를 리셋한다.
+            btnOpenFolder.Enabled = false;
+            lastOutputFolder = null;
 
             int successCount = 0;
             int noProtectionCount = 0;
@@ -376,10 +407,7 @@ namespace Unlocker_For_ExcelSheet
                 return;
             }
 
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(lastOutputFolder)
-            {
-                UseShellExecute = true
-            });
+            OpenWithShell(lastOutputFolder);
         }
     }
 }

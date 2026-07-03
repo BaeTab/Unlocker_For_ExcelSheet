@@ -4,6 +4,18 @@
 형식은 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/)를 따르며,
 버전은 [유의적 버전](https://semver.org/lang/ko/)을 따릅니다.
 
+## [2.0.1] - 2026-07-03
+
+코드 리뷰(UI) 반영 — 버튼 클릭으로 앱이 죽을 수 있던 크래시 경로 제거.
+
+### 수정 (Fixed)
+- **`Process.Start` 예외로 인한 앱 크래시 방지**: "업데이트 확인"에서 다운로드 페이지를
+  열 때, "결과 폴더 열기"에서 폴더를 열 때 브라우저/핸들러 부재·경로 소멸 등으로
+  `Win32Exception` 이 나면 앱이 죽던 문제를 `try/catch` 로 흡수하고 안내 메시지로 대체.
+- **업데이트 확인 핸들러**(`async void`)에 예외 처리 및 결과 null 방어 추가.
+- **전역 예외 안전망 추가**(`Application.ThreadException` / `AppDomain.UnhandledException`).
+- 새 배치 시작 시 이전 배치의 "결과 폴더 열기" 상태를 리셋.
+
 ## [2.0.0] - 2026-07-03
 
 문서(`docs/고도화_아이디어.md`) 기반 전면 고도화. **.NET Framework 4.8 → .NET 9** 마이그레이션.

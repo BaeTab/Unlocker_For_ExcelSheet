@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
-  <assemblyIdentity version="2.0.0.0" name="Unlocker_For_ExcelSheet.app" />
+  <assemblyIdentity version="2.0.1.0" name="Unlocker_For_ExcelSheet.app" />
 
   <!-- 표준 UAC 매니페스트: 일반 사용자 권한으로 실행 -->
   <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
